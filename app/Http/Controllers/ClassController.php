@@ -20,23 +20,18 @@ class ClassController extends Controller
         // Create a Graph client
         $graph = new Graph();
         $graph->setAccessToken($accessToken);
-    
+
         echo "<h1>Berichten</h1>";
         $getMailsUrl = "/me/messages";
-        try{
+        try {
             $messages = $graph->createRequest('GET', $getMailsUrl)
             ->setReturnType(Model\Message::class)
             ->execute();
-            foreach($messages as $message)
-            {
-                if(null !== $message->getSender() && $message->getSender() !== "")
-                {
-                    if($message->getSubject() !== "")
-                    {
+            foreach ($messages as $message) {
+                if (null !== $message->getSender() && $message->getSender() !== "") {
+                    if ($message->getSubject() !== "") {
                         echo "<h3>".$message->getSubject()."</h3>";
-                    }
-                    else
-                    {
+                    } else {
                         echo "<h3>Geen onderwerp!</h3>";
                     }
 
@@ -44,8 +39,9 @@ class ClassController extends Controller
                     print_r("<div>".$message->getBodyPreview()."</div>");
                 }
             }
+        } catch (\GuzzleHttp\Exception\ClientException $e) {
+            dd($e->getResponse()->getBody()->getContents());
         }
-        catch (\GuzzleHttp\Exception\ClientException $e) { dd($e->getResponse()->getBody()->getContents()); }
         echo "<h1>Klassen</h1>";
         // Append query parameters to the '/me/events' url
         $getEventsUrl = '/education/classes';
@@ -53,13 +49,12 @@ class ClassController extends Controller
         $classes = $graph->createRequest('GET', $getEventsUrl)
             ->setReturnType(Model\EducationClass::class)
             ->execute();
-        foreach($classes as $class)
-        {
+        foreach ($classes as $class) {
             // Append query parameters to the '/me/events' url
             $getEventsUrl = '/education/classes/'.$class->getId().'/members';
             $getEventsUrlTeachers = '/education/classes/'.$class->getId().'/teachers';
             $getEventsUrlAssignments = '/education/classes/'.$class->getId().'/assignments';
-            try{
+            try {
                 $members = $graph->createRequest('GET', $getEventsUrl)
                 ->setReturnType(Model\EducationUser::class)
                 ->execute();
@@ -69,16 +64,15 @@ class ClassController extends Controller
                 /* $assignments = $graph->createRequest('GET', $getEventsUrlAssignments)
                 ->setReturnType(Model\EducationAssignment::class)
                 ->execute(); */
+            } catch (\GuzzleHttp\Exception\ClientException $e) {
+                dd($e->getResponse()->getBody()->getContents());
             }
-            catch (\GuzzleHttp\Exception\ClientException $e) { dd($e->getResponse()->getBody()->getContents()); }
             echo "<b>". $class->getDisplayName(). " </b>";
-            foreach($teachers as $teacher)
-            {
+            foreach ($teachers as $teacher) {
                 echo $teacher->getDisplayName()." ";
             }
             echo "<ul>";
-            foreach($members as $member)
-            {
+            foreach ($members as $member) {
                 echo '<li>';
                 echo $member->getDisplayName();
                 echo '</li>';
@@ -86,40 +80,39 @@ class ClassController extends Controller
             echo "</ul>";
             print_r("<hr/>");
         }
-       
     }
 
     public function assignments()
     {
-                // Get the access token from the cache
-                $tokenCache = new TokenCache();
-                $accessToken = $tokenCache->getAccessToken();
+        // Get the access token from the cache
+        $tokenCache = new TokenCache();
+        $accessToken = $tokenCache->getAccessToken();
                 
-                // Create a Graph client
-                $graph = new Graph();
-                $graph->setBaseUrl("https://graph.microsoft.com/")
+        // Create a Graph client
+        $graph = new Graph();
+        $graph->setBaseUrl("https://graph.microsoft.com/")
                 ->setApiVersion("beta")->setAccessToken($accessToken);
             
-                echo "<h1>Klassen</h1>";
-                // Append query parameters to the '/me/events' url
-                $getEventsUrl = '/education/classes';
+        echo "<h1>Klassen</h1>";
+        // Append query parameters to the '/me/events' url
+        $getEventsUrl = '/education/classes';
             
-                $classes = $graph->createRequest('GET', $getEventsUrl)
+        $classes = $graph->createRequest('GET', $getEventsUrl)
                     ->setReturnType(Model\EducationClass::class)
                     ->execute();
-                foreach($classes as $class)
-                {
-                    // Append query parameters to the '/me/events' url
-                    $getAssigmentsUrl = '/education/classes/'.$class->getId().'/assignments';
-                    try{
-                        $assignments = $graph->createRequest('GET', $getAssigmentsUrl)
+        foreach ($classes as $class) {
+            // Append query parameters to the '/me/events' url
+            $getAssigmentsUrl = '/education/classes/'.$class->getId().'/assignments';
+            try {
+                $assignments = $graph->createRequest('GET', $getAssigmentsUrl)
                         ->setReturnType(Model\EducationAssignment::class)
                         ->execute();
-                    }
-                    catch (\GuzzleHttp\Exception\ClientException $e) { dd($e->getResponse()->getBody()->getContents()); }
-                    echo "<b>". $class->getDisplayName(). " </b>";
-                    dd($assignments);
-                    print_r("<hr/>");
+            } catch (\GuzzleHttp\Exception\ClientException $e) {
+                dd($e->getResponse()->getBody()->getContents());
+            }
+            echo "<b>". $class->getDisplayName(). " </b>";
+            dd($assignments);
+            print_r("<hr/>");
         }
     }
 }
